@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Telecom CAD & Radiation Analyzer</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-slate-900 text-slate-100 min-h-screen py-8 px-4">
+  <div class="max-w-6xl mx-auto">
+    <!-- Header -->
+    <header class="mb-8 border-b border-slate-700 pb-4">
+      <h1 class="text-3xl font-bold text-sky-400">Telecom CAD Structural & Radiation Analyzer</h1>
+      <p class="text-slate-400 text-sm mt-1">Upload CAD drawings and physical installation photos to compute antenna radiation placements.</p>
+    </header>
+
+    <!-- Main Content Grid -->
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
+      
+      <!-- Input Panel -->
+      <div class="lg:col-span-4 bg-slate-800 p-6 rounded-xl border border-slate-700 h-fit">
+        <h2 class="text-xl font-semibold mb-4 text-white">Input Parameters</h2>
+        
+        <form id="analyzeForm" class="space-y-4">
+          <div>
+            <label class="block text-xs font-medium text-slate-300 mb-1">DXF CAD File (.dxf)</label>
+            <input type="file" id="dxfFile" name="dxf_file" accept=".dxf" required
+              class="w-full text-xs text-slate-300 file:mr-3 file:py-2 file:px-3 file:rounded-md file:border-0 file:text-xs file:font-semibold file:bg-sky-600 file:text-white hover:file:bg-sky-500 bg-slate-700 rounded-md p-1 border border-slate-600" />
+          </div>
+
+          <div>
+            <label class="block text-xs font-medium text-slate-300 mb-1">Steelwork Reference Photo (.png, .jpg)</label>
+            <input type="file" id="refImage" name="ref_image" accept="image/*" required
+              class="w-full text-xs text-slate-300 file:mr-3 file:py-2 file:px-3 file:rounded-md file:border-0 file:text-xs file:font-semibold file:bg-sky-600 file:text-white hover:file:bg-sky-500 bg-slate-700 rounded-md p-1 border border-slate-600" />
+          </div>
+
+          <div>
+            <label class="block text-xs font-medium text-slate-300 mb-1">Target Azimuths (comma or JSON)</label>
+            <input type="text" id="azimuths" name="azimuths" value="[0, 120, 240]" required
+              class="w-full bg-slate-700 border border-slate-600 rounded-md px-3 py-2 text-sm text-white focus:outline-none focus:border-sky-500" />
+          </div>
+
+          <div>
+            <label class="block text-xs font-medium text-slate-300 mb-1">Input Prompt / Parameters</label>
+            <textarea id="inputParams" name="input_params" rows="3" required
+              class="w-full bg-slate-700 border border-slate-600 rounded-md px-3 py-2 text-sm text-white focus:outline-none focus:border-sky-500"
+              placeholder="Antenna name and azimuths (e.g. Antenna A1 with azimuth of 0, 120, 240)"></textarea>
+          </div>
+
+          <button type="submit" id="submitBtn"
+            class="w-full bg-sky-600 hover:bg-sky-500 text-white font-medium py-2.5 px-4 rounded-md transition duration-150 ease-in-out flex items-center justify-center space-x-2">
+            <span id="btnText">Run Analysis</span>
+            <div id="btnSpinner" class="hidden w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+          </button>
+        </form>
+      </div>
+
+      <!-- Display Panel -->
+      <div class="lg:col-span-8 space-y-6">
+        
+        <!-- Snapshot Viewer -->
+        <div class="bg-slate-800 p-6 rounded-xl border border-slate-700">
+          <div class="flex justify-between items-center mb-4">
+            <h2 class="text-xl font-semibold text-white">Generated CAD Snapshot</h2>
+            <span id="statusBadge" class="text-xs px-2.5 py-1 rounded bg-slate-700 text-slate-400">Idle</span>
+          </div>
+
+          <div id="imageContainer" class="bg-slate-950 border border-slate-700 rounded-lg min-h-[350px] flex items-center justify-center overflow-hidden relative">
+            <p id="placeholderText" class="text-slate-500 text-sm">Upload files and trigger analysis to preview snapshot.</p>
+            <img id="resultImage" class="hidden max-h-[500px] w-auto object-contain mx-auto" alt="DXF Snapshot" />
+          </div>
+        </div>
+
+        <!-- Details & JSON Results -->
+        <div class="bg-slate-800 p-6 rounded-xl border border-slate-700">
+          <h2 class="text-lg font-semibold mb-3 text-white">Analysis Details</h2>
+          <div id="summaryCards" class="grid grid-cols-2 sm:grid-cols-3 gap-3 mb-4 text-xs">
+            <div class="bg-slate-700/50 p-3 rounded border border-slate-600">
+              <span class="text-slate-400">Matched Antenna:</span>
+              <p id="resAntenna" class="font-bold text-sky-400 mt-1">-</p>
+            </div>
+            <div class="bg-slate-700/50 p-3 rounded border border-slate-600">
+              <span class="text-slate-400">Normal Distance:</span>
+              <p id="resDistance" class="font-bold text-emerald-400 mt-1">-</p>
+            </div>
+            <div class="bg-slate-700/50 p-3 rounded border border-slate-600">
+              <span class="text-slate-400">Radiation Source:</span>
+              <p id="resSource" class="font-bold text-amber-400 mt-1">-</p>
+            </div>
+          </div>
+          <pre id="jsonOutput" class="bg-slate-950 p-4 rounded-lg text-xs text-emerald-400 overflow-x-auto max-h-60 border border-slate-700">{}</pre>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const form = document.getElementById('analyzeForm');
+    const submitBtn = document.getElementById('submitBtn');
+    const btnText = document.getElementById('btnText');
+    const btnSpinner = document.getElementById('btnSpinner');
+    const statusBadge = document.getElementById('statusBadge');
+    const placeholderText = document.getElementById('placeholderText');
+    const resultImage = document.getElementById('resultImage');
+    const jsonOutput = document.getElementById('jsonOutput');
+
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+
+      // UI Loading state
+      submitBtn.disabled = true;
+      btnSpinner.classList.remove('hidden');
+      btnText.textContent = 'Processing CAD...';
+      statusBadge.textContent = 'Processing';
+      statusBadge.className = 'text-xs px-2.5 py-1 rounded bg-amber-900/60 text-amber-300 border border-amber-700';
+
+      const formData = new FormData(form);
+
+      try {
+        const response = await fetch('/api/analyze', {
+          method: 'POST',
+          body: formData
+        });
+
+        const resData = await response.json();
+
+        if (response.ok && resData.success) {
+          statusBadge.textContent = 'Completed';
+          statusBadge.className = 'text-xs px-2.5 py-1 rounded bg-emerald-900/60 text-emerald-300 border border-emerald-700';
+          
+          const result = resData.data;
+
+          // Display the snapshot image
+          const snapUrl = result.final_snapshot_path || result.snapshot.saved_snapshot;
+          resultImage.src = `/${snapUrl}?t=${new Date().getTime()}`;
+          resultImage.classList.remove('hidden');
+          placeholderText.classList.add('hidden');
+
+          // Summary highlights
+          document.getElementById('resAntenna').textContent = result.antenna_identification?.matched_index || 'N/A';
+          document.getElementById('resDistance').textContent = result.Normal_distance ? `${result.Normal_distance.toFixed(2)} mm` : 'N/A';
+          document.getElementById('resSource').textContent = result.radiation ? `(${result.radiation[0].toFixed(1)},${result.radiation[1].toFixed(1)})` : 'N/A';
+
+          // JSON Dump
+          jsonOutput.textContent = JSON.stringify(result, null, 2);
+        } else {
+          throw new Error(resData.error || resData.detail || 'Analysis execution failed');
+        }
+      } catch (err) {
+        statusBadge.textContent = 'Error';
+        statusBadge.className = 'text-xs px-2.5 py-1 rounded bg-rose-900/60 text-rose-300 border border-rose-700';
+        alert('Error: ' + err.message);
+      } finally {
+        submitBtn.disabled = false;
+        btnSpinner.classList.add('hidden');
+        btnText.textContent = 'Run Analysis';
+      }
+    });
+  </script>
+</body>
+</html>

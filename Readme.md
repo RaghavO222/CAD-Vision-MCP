@@ -18,8 +18,7 @@
 
 ## 🚀 Installation
 
-### 1. Clone the repository
-```bash
+1. Clone the repository
 git clone [https://github.com/RaghavO222/CAD-Vision-MCP.git](https://github.com/RaghavO222/CAD-Vision-MCP.git)
 cd CAD-Vision-MCP
 

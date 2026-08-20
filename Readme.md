@@ -18,27 +18,35 @@
 
 ## 🚀 Installation
 
-1. Clone the repository
+### 1. Clone the repository
 git clone [https://github.com/RaghavO222/CAD-Vision-MCP.git](https://github.com/RaghavO222/CAD-Vision-MCP.git)
+
 cd CAD-Vision-MCP
 
-2. Create a Virtual Environment (Recommended)
+### 2. Create a Virtual Environment (Recommended)
 python -m venv venv
+
 source venv/bin/activate  # On Windows use: venv\Scripts\activate
 
-3. Install Dependencies
+### 3. Install Dependencies
 Install all required packages in a single command:
+
 pip install fastapi uvicorn ezdxf pymupdf shapely scipy numpy pillow httpx requests anthropic dotenv python-multipart
 
-⚙️ Configuration
+# ⚙️ Configuration
 Create a .env file in the root directory of your project to store your API keys and environment variables securely:
-# .env
+
+## .env
+
 ANTHROPIC_API_KEY=your_anthropic_api_key_here
+
 HOST=0.0.0.0
+
 PORT=8000
 
-🏃‍♂️ Usage
+# 🏃‍♂️ Usage
 Start the MCP server using Uvicorn:
+
 uvicorn server:app --reload --host 0.0.0.0 --port 8000
 
 Once the server is running, you can access the automatic interactive API documentation at:
@@ -47,9 +55,13 @@ Swagger UI: http://localhost:8000/docs
 
 ReDoc: http://localhost:8000/redoc
 
-🛠️ Tech Stack & Dependencies
+# 🛠️ Tech Stack & Dependencies
 Core API: fastapi, uvicorn, python-multipart
+
 CAD Processing: ezdxf, shapely, scipy, numpy
+
 PDF & Vision Processing: pymupdf (fitz), pillow
+
 LLM & HTTP: anthropic, httpx, requests
+
 Config Management: python-dotenv

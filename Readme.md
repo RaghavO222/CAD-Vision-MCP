@@ -45,9 +45,9 @@ HOST=0.0.0.0
 PORT=8000
 
 # 🏃‍♂️ Usage
-Start the MCP server using Uvicorn:
+Start the MCP server using:
 
-uvicorn server:app --reload --host 0.0.0.0 --port 8000
+python server.py
 
 Once the server is running, you can access the automatic interactive API documentation at:
 
